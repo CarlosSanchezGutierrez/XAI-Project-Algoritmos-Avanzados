@@ -1,28 +1,33 @@
 import numpy as np
 import pandas as pd
 
-def add_noise(df: pd.DataFrame, sigma: float, rng: np.random.Generator):
+def add_noise(df: pd.DataFrame, sigma: float, rng: np.random.Generator) -> pd.DataFrame:
     if sigma <= 0:
         return df.copy()
-    return df + rng.normal(0.0, sigma, size=df.shape)
+    arr = df.to_numpy(copy=True)
+    arr = arr + rng.normal(0.0, sigma, size=arr.shape)
+    return pd.DataFrame(arr, columns=df.columns, index=df.index)
 
-def apply_missing(df: pd.DataFrame, rate: float, rng: np.random.Generator):
+def apply_missing(df: pd.DataFrame, rate: float, rng: np.random.Generator) -> pd.DataFrame:
     if rate <= 0:
         return df.copy()
 
-    out = df.copy()
-    mask = rng.random(size=df.shape) < rate
-    out.values[mask] = np.nan
+    # Copia a numpy writable
+    arr = df.to_numpy(copy=True)
+    mask = rng.random(size=arr.shape) < rate
+    arr[mask] = np.nan
 
-    # imputación simple (suficiente para v1)
+    out = pd.DataFrame(arr, columns=df.columns, index=df.index)
+
+    # imputación simple (v1)
     out = out.ffill().bfill()
     out = out.fillna(out.mean())
     return out
 
-def ema_smooth_scores(score_series: pd.DataFrame, alpha: float):
+def ema_smooth_scores(score_series: pd.DataFrame, alpha: float) -> pd.DataFrame:
     return score_series.ewm(alpha=alpha, adjust=False).mean()
 
-def jaccard(a: set, b: set):
+def jaccard(a: set, b: set) -> float:
     if len(a) == 0 and len(b) == 0:
         return 1.0
     return len(a & b) / len(a | b)
