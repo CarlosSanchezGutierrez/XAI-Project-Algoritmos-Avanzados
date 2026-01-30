@@ -2,7 +2,9 @@ import numpy as np
 import networkx as nx
 
 def make_random_dag(n_nodes: int, edge_prob: float, rng: np.random.Generator) -> nx.DiGraph:
+    # Asegura aciclicidad: solo edges según un orden aleatorio, i -> j con i<j
     perm = rng.permutation(n_nodes)
+
     g = nx.DiGraph()
     g.add_nodes_from(range(n_nodes))
 
