@@ -20,7 +20,6 @@ def apply_missing(df: pd.DataFrame, rate: float, rng: np.random.Generator) -> pd
 
     out = pd.DataFrame(arr, columns=df.columns, index=df.index)
 
-    # simple imputation (v1)
     out = out.ffill().bfill()
     out = out.fillna(out.mean())
     return out
