@@ -6,3 +6,19 @@ venv/
 outputs/
 .DS_Store
 EOF
+
+# LaTeX build artifacts
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.toc
+paper/*.lof
+paper/*.lot
+paper/*.fls
+paper/*.fdb_latexmk
+paper/*.synctex.gz
+paper/*.bbl
+paper/*.blg
+
+# Optional: keep paper/main.pdf untracked (final PDF will be at root)
+paper/main.pdf
