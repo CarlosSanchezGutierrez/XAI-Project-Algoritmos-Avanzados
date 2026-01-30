@@ -1,0 +1,86 @@
+\documentclass[conference]{IEEEtran}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{url}
+\usepackage{hyperref}
+\hypersetup{hidelinks}
+
+\title{XAI Causal Anomaly Explainer: Algorithmic Analysis and Initial Implementation}
+\author{\IEEEauthorblockN{Carlos Sanchez Gutierrez (A01412419)}
+\IEEEauthorblockA{Algoritmos Avanzados / IA Explicable}}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This report analyzes an explainable AI (XAI) method for diagnosing anomalous events in multivariate telemetry by returning an explicit explanation object (minimal causal subgraph + ranking + fidelity). We also present the first runnable implementation and robustness experiments required to set up Midterm 2.
+\end{abstract}
+
+\section{Part I — Algorithmic Analysis}
+
+\subsection{Q1. Problem Definition, Motivation, and Assumptions}
+\textbf{Problem.} Given a multivariate time series $X_{1:n}(t)$ and a causal DAG $G$ over variables, detect an anomalous time $t^\*$ and output an \emph{explanation object} $E$ describing \emph{why} the event happened.
+\textbf{Inputs:} telemetry matrix, training window, DAG (known or estimated), detection threshold. 
+\textbf{Output (explanation object):} a set of nodes $V_E$, edges $E_E \subseteq G$, a ranked list of suspicious nodes, and a scalar fidelity score.
+\textbf{Computation model:} local linear causal models per node; residual-based scoring; combinatorial selection of a small explanatory subgraph.
+
+\textbf{Assumptions.} (i) Causal graph is correct enough to support path-based attribution. (ii) Local mechanisms are approximately linear under normal operation. (iii) Anomalies manifest as large residuals at $t^\*$.
+\textbf{Relaxation impact.} If (i) is relaxed, paths may misattribute responsibility (lower faithfulness). If (ii) is relaxed, linear residuals become a weak proxy; nonlinear models (NN/Bayesian) would improve. If (iii) is relaxed, detection and explanation must incorporate temporal or distributional shifts, not only point outliers.
+
+\subsection{Q2. Core Algorithm and Correctness}
+\textbf{Idea.} Fit a local predictor for each node from its parents in $G$. At event time $t^\*$, compute residual magnitudes as suspicion scores. Construct candidate root-to-node paths for top-scoring nodes and select a small subgraph that maximizes coverage of suspicious nodes while penalizing explanation size. 
+
+\textbf{Invariant/axiom (completeness-style).} Explanation should cover a high fraction of the suspicious set (coverage) while remaining small (parsimony). A fidelity score $F(E)$ combines coverage and size penalty.
+
+\textbf{Correctness sketch.} Under correct $G$ and stable mechanisms, a true causal upstream disturbance increases residuals along descendant paths; selecting minimal paths to top residual nodes recovers (approximately) the causal chain. Faithfulness is evaluated by fidelity and robustness stability under perturbations.
+
+\subsection{Q3. Complexity, Guarantees, and Limits}
+Training local regressors: $\sum_i O(T \cdot \deg(i)^2)$ for linear regression with $T$ training points (implementation uses scikit-learn; practical cost dominated by matrix ops). Residual scoring at one time: $O(n + m)$ evaluations. Path extraction for $k$ top nodes via shortest paths: $O(k(m+n))$ worst-case with BFS on DAG. Greedy set cover approximation for explanation nodes: $O(k \cdot n)$ with small constants.
+
+\textbf{Limits.} If $G$ is wrong, explanation may be plausible but not faithful. If anomalies are subtle or distributed, residual thresholding can miss them. Explanation selection resembles set cover, which is NP-hard; greedy gives standard approximation behavior but no exact optimality guarantee.
+
+\subsection{Q4. Robustness and Scalability}
+\textbf{Robustness.} We stress-test with additive noise and missingness. Regularization is applied by smoothing detection scores with EMA before selecting suspicious nodes, then re-running the explanation. Stability is measured by Jaccard similarity of explanation node sets between baseline and perturbed runs.
+
+\textbf{Scalability.} The method is parallelizable across nodes (local models) and across robustness scenarios. It is GPU-optional (linear algebra can accelerate) but CPU is sufficient for medium $n$. Sampling cost is low (single-pass residuals) compared to perturbation-heavy methods like SHAP.
+
+\subsection{Q5. Limitations and Algorithmic Next Steps}
+(1) Replace linear local models with Bayesian or neural predictors for nonlinear mechanisms. (2) Jointly learn/validate the DAG and propagate uncertainty into explanations. (3) Formalize robustness with bounds on explanation stability under bounded noise/missingness and design stronger regularizers than EMA.
+
+\section{Part II — Project Report (M1–M2)}
+
+\subsection{Project Overview}
+Goal: build an XAI-first diagnosis tool for anomalous telemetry that outputs an explicit explanation object (subgraph + ranking + fidelity), not only an anomaly flag.
+
+\subsection{M1 — XAI Feature (Implemented)}
+Implemented: runnable repository that (i) simulates causal telemetry on a DAG, (ii) detects an event via z-score thresholding, (iii) generates an explanation object by selecting a small causal subgraph covering top residual nodes. Evidence is provided in Appendix A (JSON explanation object).
+
+\subsection{M2 — Robustness / Regularization (Implemented)}
+Implemented robustness experiment grid: noise $\sigma \in \{0,0.5,1.0\}$ and missing rate $r \in \{0,0.05,0.15\}$. Regularization: EMA smoothing of detection score series prior to suspicious-node selection. Evidence is Appendix B (robustness table) and Figure~\ref{fig:stability}.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{stability_plot.png}
+  \caption{Stability of explanations under noise and missingness. Jaccard similarity vs the baseline explanation, comparing baseline vs EMA-regularized detection.}
+  \label{fig:stability}
+\end{figure}
+
+\section*{References}
+% Si no tienes citas formales aún, déjalo vacío o agrega 1-2 básicas.
+% \begin{thebibliography}{1}
+% \bibitem{doshi} F. Doshi-Velez and B. Kim, ``Towards a rigorous science of interpretable machine learning,'' 2017.
+% \end{thebibliography}
+
+\appendices
+\section{Appendix A: M1 Evidence (Explanation Object)}
+Paste here the JSON block \texttt{explanation\_baseline} from \texttt{outputs/.../results.json}. Use verbatim in a small excerpt if needed.
+
+\section{Appendix B: M2 Evidence (Robustness Table)}
+Paste here the robustness rows (noise\_sigma, missing\_rate, jaccard\_baseline, jaccard\_regularized) from \texttt{results.json}.
+
+\end{document}
