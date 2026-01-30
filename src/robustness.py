@@ -1,3 +1,4 @@
+cat > src/robustness.py <<'EOF'
 import numpy as np
 import pandas as pd
 
@@ -12,14 +13,14 @@ def apply_missing(df: pd.DataFrame, rate: float, rng: np.random.Generator) -> pd
     if rate <= 0:
         return df.copy()
 
-    # Copia a numpy writable
+    # numpy copy writable
     arr = df.to_numpy(copy=True)
     mask = rng.random(size=arr.shape) < rate
     arr[mask] = np.nan
 
     out = pd.DataFrame(arr, columns=df.columns, index=df.index)
 
-    # imputación simple (v1)
+    # simple imputation (v1)
     out = out.ffill().bfill()
     out = out.fillna(out.mean())
     return out
@@ -31,3 +32,4 @@ def jaccard(a: set, b: set) -> float:
     if len(a) == 0 and len(b) == 0:
         return 1.0
     return len(a & b) / len(a | b)
+EOF
