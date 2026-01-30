@@ -1,0 +1,32 @@
+cat > configs/default.yaml <<'EOF'
+seed: 7
+
+data:
+  n_nodes: 12
+  n_steps: 800
+  edge_prob: 0.18
+  noise_std: 0.6
+  train_frac: 0.6
+
+anomaly:
+  t0: 520
+  kind: "spike"        # spike | drift | drop
+  strength: 5.0
+  target: "auto"       # auto o "X3" etc
+
+detection:
+  zscore_threshold: 3.0
+  min_nodes_flagged: 2
+
+explanation:
+  topk_suspicious: 6
+  max_expl_nodes: 6
+  fidelity_alpha: 0.8
+  use_metaheuristic: true
+
+robustness:
+  enabled: true
+  noise_levels: [0.0, 0.5, 1.0]
+  missing_rates: [0.0, 0.05, 0.15]
+  ema_alpha: 0.25
+EOF
