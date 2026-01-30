@@ -1,4 +1,3 @@
-cat > configs/default.yaml <<'EOF'
 seed: 7
 
 data:
@@ -12,7 +11,7 @@ anomaly:
   t0: 520
   kind: "spike"        # spike | drift | drop
   strength: 5.0
-  target: "auto"       # auto o "X3" etc
+  target: "auto"       # auto o "X3"
 
 detection:
   zscore_threshold: 3.0
@@ -29,4 +28,3 @@ robustness:
   noise_levels: [0.0, 0.5, 1.0]
   missing_rates: [0.0, 0.05, 0.15]
   ema_alpha: 0.25
-EOF
