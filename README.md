@@ -32,3 +32,28 @@ The goal is not “just anomaly detection”, but **algorithmic explanation of a
 python -m venv .venv
 source .venv/bin/activate   # (Windows: .venv\Scripts\activate)
 pip install -r requirements.txt
+
+## What this repo does (XAI-first)
+Detection is only a trigger. The main output is an **explanation object** for an anomalous event:
+- ranked suspicious nodes (residual-based),
+- a minimal causal subgraph (nodes + edges),
+- a fidelity score.
+
+## How to run
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python -m src.run_experiment
+
+## Outputs
+The run creates: outputs/<timestamp>/
+- results.json (includes explanation_baseline + robustness experiments)
+- stability_plot.png (Jaccard stability: baseline vs regularized)
+
+## Explanation Object (in results.json)
+Key fields:
+- explanation_baseline.explanation_nodes
+- explanation_baseline.explanation_edges
+- explanation_baseline.fidelity
+- explanation_baseline.method
+- robustness[*].jaccard_baseline vs robustness[*].jaccard_regularized
