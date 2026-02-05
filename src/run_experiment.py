@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from .dag import make_random_dag
+from .dag import make_random_dag, plot_dag
 from .simulate import simulate_linear_gaussian, inject_anomaly
 from .detect import fit_zscore_baseline, detect_event
 from .explain import explain_event
@@ -22,6 +22,7 @@ def main(config_path="configs/default.yaml"):
     rng = np.random.default_rng(cfg["seed"])
 
     g = make_random_dag(cfg["data"]["n_nodes"], cfg["data"]["edge_prob"], rng)
+    plot_dag(g, title="Generated Causal DAG")
     df = simulate_linear_gaussian(g, cfg["data"]["n_steps"], cfg["data"]["noise_std"], rng)
 
     df_anom, true_target = inject_anomaly(
